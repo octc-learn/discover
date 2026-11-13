@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chicago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const today=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
 const dateObj=s=>new Date(s+'T12:00:00Z');
 const fmt=(s,opts={month:'short',day:'numeric'})=>new Intl.DateTimeFormat('en-US',{timeZone:'UTC',...opts}).format(dateObj(s));
 const iso=d=>d.toISOString().slice(0,10);
@@ -12,7 +12,7 @@ const active=e=>(e.end||e.date)>=today();
 const sorted=es=>[...es].sort((a,b)=>(a.date||today()).localeCompare(b.date||today()));
 const range=e=>!e.date?'Through '+fmt(e.end):fmt(e.date)+(e.end&&e.end!==e.date?' – '+fmt(e.end):'');
 const stamp=e=>e.merit?'<span class="stamp">Merit approved</span>':'';
-const poster=e=>'<div class="poster">'+(e.flyer?'<img hidden loading="lazy" src="flyers/'+encodeURIComponent(e.flyer)+'" alt="'+esc(e.title)+' promotional flyer" data-flyer="'+esc(e.flyer)+'">':'')+'<div class="fallback"><span>'+esc(e.category)+'</span><strong>'+esc(e.title)+'</strong><span>'+esc(range(e))+'</span></div></div>';
+const poster=e=>'<div class="poster">'+(e.flyer?'<img hidden loading="eager" src="flyers/'+encodeURIComponent(e.flyer)+'" alt="'+esc(e.title)+' promotional flyer" data-flyer="'+esc(e.flyer)+'">':'')+'<div class="fallback"><span>'+esc(e.category)+'</span><strong>'+esc(e.title)+'</strong><span>'+esc(range(e))+'</span></div></div>';
 function wireImages(root){root.querySelectorAll('img[data-flyer]').forEach(img=>{const show=()=>{img.hidden=false;const b=document.createElement('button');b.type='button';b.textContent='View full flyer';b.className='flyer-open';b.addEventListener('click',()=>{$('large-flyer').src=img.src;$('large-flyer').alt=img.alt;$('flyer-dialog').showModal()});img.parentElement.insertAdjacentElement('afterend',b)};if(img.complete&&img.naturalWidth)show();else img.addEventListener('load',show,{once:true})})}
 function card(e){const d=e.date||e.end;return '<article class="event" id="event-'+esc(e.id)+'"><div class="dateblock">'+esc(fmt(d,{month:'short'}))+'<strong>'+esc(fmt(d,{day:'numeric'}))+'</strong>'+(!e.date?'Through':'')+'</div><div><p class="eyebrow">'+esc(e.category)+'</p>'+stamp(e)+'<h3>'+esc(e.title)+'</h3><p class="date">'+esc(range(e))+(e.time?' · '+esc(e.time):'')+'</p><p>'+esc(e.location)+'</p><p>'+esc(e.description)+'</p></div>'+(e.flyer?'<div>'+poster(e)+'</div>':'')+'</article>'}
 function renderFeature(){const e=featured[index];$('prev').disabled=$('next').disabled=featured.length<2;$('feature-count').textContent=e?(index+1)+' of '+featured.length:'';$('feature').innerHTML=e?'<div>'+poster(e)+'</div><div class="feature-copy"><p class="eyebrow">'+esc(e.category)+'</p>'+stamp(e)+'<h3>'+esc(e.title)+'</h3><p class="date">'+esc(range(e))+(e.time?' · '+esc(e.time):'')+'</p><p>'+esc(e.location)+'</p><p>'+esc(e.description)+'</p><a href="#events">See all events →</a></div>':'<p class="empty">No upcoming events are listed yet. Check back for new opportunities.</p>';wireImages($('feature'))}
